@@ -1,0 +1,98 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+import os
+
+# Load data from the Excel file
+df = pd.read_excel(r'C:\Users\ADMIN\Documents\book1.xlsx')  # Updated path to your Excel file
+
+# Function to create data visualizations (attendance and test score charts)
+def create_visualizations(student_name, attendance, test_score):
+    # Attendance Pie Chart
+    plt.figure(figsize=(6, 4))
+    plt.pie([attendance, 100 - attendance], labels=['Attended', 'Missed'], autopct='%1.1f%%', colors=['green', 'red'])
+    plt.title(f"{student_name}'s Quants Attendance")
+    plt.savefig(f"{student_name}_attendance.png")
+    plt.close()
+
+    # Test Score Bar Chart
+    plt.figure(figsize=(6, 6))
+    plt.bar(['Test Score'], [test_score], color='blue')
+    plt.ylim(0, 100)
+    plt.yticks(range(0, 101, 5))
+    plt.title(f"{student_name}'s Quants Test Score")
+    plt.ylabel('Score')
+    plt.savefig(f"{student_name}_test_score.png")
+    plt.close()
+
+# Function to send email with attachment
+def send_email(to_email, subject, body, attachments):
+    msg = MIMEMultipart()
+    msg['From'] = 'naishil@fpa.edu.in'  # Your email address
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    # Attach the body message, explicitly setting encoding to handle Unicode
+    msg.attach(MIMEText(body, 'plain', 'utf-8'))
+
+    # Attach the images
+    for attachment in attachments:
+        try:
+            with open(attachment, 'rb') as file:
+                img = MIMEImage(file.read())
+                msg.attach(img)
+        except Exception as e:
+            print(f"Error attaching file {attachment}: {e}")
+
+    # Sending the email via SMTP
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:  # Gmail SMTP server
+            server.starttls()
+            server.login('naishil@fpa.edu.in', 'okhv xvot wlcc mstx')  # Use the app password here
+            server.sendmail('naishil@fpa.edu.in', to_email, msg.as_string())
+        print(f"Email sent to {to_email}")
+    except Exception as e:
+        print(f"Failed to send email to {to_email}: {e}")
+
+# Loop over each student and generate report
+for index, row in df.iterrows():
+    student_name = row['Student Name']
+    attendance = row['Attendance']
+    test_score = row['Test Score']
+    parent_email = row['Parent Email']
+
+    # Generate visualizations
+    create_visualizations(student_name, attendance, test_score)
+
+    # Custom email body text (with encoding to handle any special characters)
+    body = f"""\
+    Dear Student,
+
+    I hope this message finds you well.
+
+    Please find attached your latest progress report, which includes detailed information on your attendance and recent test scores.
+    
+    We encourage you to review the attached document to stay informed about their performance and identify areas for further improvement.
+
+    Should you have any questions or require further clarification regarding your progress, please do not hesitate to reach out to our mentorship team and
+    faculty team at +919152210878.
+
+    We commend your  efforts and dedication and look forward to their continued success.
+
+    Best Regards,
+    CFA Academic Team
+    FPA Edutech
+    """
+
+    # Attach images (attendance and test score graphs)
+    attachments = [f"{student_name}_attendance.png", f"{student_name}_test_score.png"]
+
+    # Send the email
+    send_email(parent_email, f"Progress Report for {student_name}", body, attachments)
+
+    # Optionally, clean up saved images after sending
+    for attachment in attachments:
+        os.remove(attachment)
