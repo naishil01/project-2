@@ -1,2 +1,2 @@
 # project-2
-Automation of reports(student progress) code with this Developed and generated comprehensive progress reports to track project milestones and key performance indicators, facilitating data-driven decision-making.
+This script automates the progress report generation and email dispatch process for students. It reads student performance data from an Excel sheet, generates visual summaries (attendance and test score), sends a personalized email to the parent with attached charts, and finally deletes the temporary files to keep the system clean. It uses pandas for data processing, matplotlib for charting, and smtplib with MIME for secure, formatted email communication via Gmail
